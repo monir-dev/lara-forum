@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 
 class ThreadFilters extends Filters
 {
-    protected $filters = ['by', 'popular'];
+    protected $filters = ['by', 'popular', 'unanswered'];
 
     /**
      * Filter a query by a given username
@@ -25,7 +25,6 @@ class ThreadFilters extends Filters
     /**
      * Filter a query by popularity
      *
-     * @param string $username
      * @return mixed
      */
     protected function popular()
@@ -33,5 +32,15 @@ class ThreadFilters extends Filters
         $this->builder->getQuery()->orders = [];
 
         return $this->builder->orderBy('replies_count', 'desc');
+    }
+
+    /**
+     * Filter a query by unanswered
+     *
+     * @return mixed
+     */
+    protected function unanswered()
+    {
+        return $this->builder->where('replies_count', 0);
     }
 }

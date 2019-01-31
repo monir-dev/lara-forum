@@ -17,10 +17,6 @@ class Thread extends Model
     {
         parent::boot();
 
-        static::addGlobalScope('replyCount', function ($builder) {
-            $builder->withCount('replies');
-        });
-
         static::deleting(function ($thread) {
             $thread->replies->each(function ($reply) {
                 $reply->delete();
@@ -42,18 +38,57 @@ class Thread extends Model
         return $this->belongsTo(Channel::class);
     }
 
+    /**
+     * Return thread path
+     *
+     * @return string
+     */
     public function path() {
         return "/threads/{$this->channel->slug}/{$this->id}";
     }
 
+    /**
+     * Add a reply to the thread
+     *
+     * @param $reply
+     * @return Model
+     */
     public function addReply($reply)
     {
-        $this->replies()->create($reply);
+        return $this->replies()->create($reply);
     }
 
+    /**
+     * Apply all relevent thred filter
+     *
+     * @param $query
+     * @param $filters
+     * @return mixed
+     */
     public function scopeFilter($query, $filters)
     {
         return $filters->apply($query);
+    }
+
+    public function subscribe($userId = null)
+    {
+        $this->subscriptions()->create([
+            'user_id' => $userId ?: auth()->id()
+        ]);
+    }
+
+     public function unsubscribe($userId = null)
+    {
+        $this->subscriptions()
+            ->where('user_id', $userId ?: auth()->id())
+            ->delete();
+    }
+
+
+
+    public function subscriptions()
+    {
+        return $this->hasMany(ThreadSubscription::class);
     }
 
 

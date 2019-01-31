@@ -20,6 +20,7 @@
                             <a class="nav-link" href="/threads?by={{ auth()->user()->name }}">My Threads</a>
                         @endif
                         <a class="nav-link" href="/threads?popular=1">Popular All Time</a>
+                        <a class="nav-link" href="/threads?unanswered=1">Unanswered Threads</a>
                     </div>
                 </li>
                 <li class="nav-item">

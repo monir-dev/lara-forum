@@ -4,13 +4,12 @@
             <div class="level">
                 <h5 class="flex">
                     <a :href="'/profiles/'+item.owner.name" v-text="item.owner.name">
-                    </a> said {{ item.created_at }}...
+                    </a> said in <span v-text="ago"></span>...
                 </h5>
-                <!--@if (Auth::check())-->
-                    <!--<div>-->
-                        <!--<Favorite :reply="{{ $reply }}"></Favorite>-->
-                    <!--</div>-->
-                <!--@endif-->
+
+                <div v-if="signedId">
+                    <Favorite :reply="item"></Favorite>
+                </div>
             </div>
         </div>
 
@@ -25,16 +24,16 @@
             <div v-else v-text="body"></div>
         </div>
 
-        <!--@can('delete', $reply)-->
-            <div class="card-footer d-flex">
-                <button class="btn btn-outline-warning btn-sm mr-2" @click="editing = true">Edit</button>
-                <button class="btn btn-outline-danger btn-sm mr-2" @click="destroy">Delete</button>
-            </div>
-        <!--@endcan-->
+        <div class="card-footer d-flex" v-if="canDelete">
+            <button class="btn btn-outline-warning btn-sm mr-2" @click="editing = true">Edit</button>
+            <button class="btn btn-outline-danger btn-sm mr-2" @click="destroy">Delete</button>
+        </div>
     </div>
 </template>
 
 <script>
+    import moment from 'moment';
+
     import Favorite from './Favorite.vue';
 
     export default {
@@ -47,6 +46,19 @@
                 body: this.item.body
             }
         },
+        computed: {
+            ago() {
+                const time = moment(this.item.created_at + "+00:00", "YYYY-MM-DD HH:mm:ssZ");
+                return time.fromNow() + '...';
+            },
+            signedId() {
+                return window.App.signedId;
+            },
+            canDelete() {
+                return this.authorize(user => this.item.user_id === user.id);
+            }
+        },
+
         methods: {
             update() {
                 axios.patch('/replies/' + this.item.id, {
@@ -60,10 +72,6 @@
                 axios.delete('/replies/' + this.item.id);
 
                 this.$emit('deleted', this.item.id);
-
-                // $(this.$el).fadeOut(300, () => {
-                //     flash('Your Reply has been deleted');
-                // });
             }
         }
     }

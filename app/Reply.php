@@ -16,6 +16,20 @@ class Reply extends Model
 
     protected $appends = ['favoritesCount', ' '];
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::created(function($model) {
+           $model->thread->increment('replies_count');
+        });
+
+        static::deleted(function ($model) {
+            $model->thread->decrement('replies_count');
+        });
+    }
+
+
     public function owner() {
         return $this->belongsTo(User::class, 'user_id');
     }
