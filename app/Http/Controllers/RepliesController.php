@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Reply;
 use App\Thread;
+use App\Inspaction\Spam;
 use Illuminate\Http\Request;
 
 class RepliesController extends Controller
@@ -37,12 +38,17 @@ class RepliesController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  $channelId
-     * @param  \Illuminate\Http\Request  $request
+     * @param Thread $thread
+     * @param Spam $spam
      * @return \Illuminate\Http\Response
+     * @throws \Illuminate\Validation\ValidationException
      */
-    public function store($channelId, Thread $thread)
+    public function store($channelId, Thread $thread, Spam $spam)
     {
         $this->validate(request(), ['body' => 'required']);
+
+        // spam check
+        $spam->detect(request('body'));
 
         $reply = $thread->addReply([
             'body' => request('body'),

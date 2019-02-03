@@ -2,7 +2,9 @@
 
 namespace Tests\Unit;
 
+use App\Notifications\ThreadWasUpdated;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -44,11 +46,28 @@ class ThreadTest extends TestCase
     /** @test */
     public function a_thread_can_add_reply() {
         $this->thread->addReply([
-           'body' => "this is body",
-           'user_id' => 1
+            'body' => "this is body",
+            'user_id' => 1
         ]);
         $this->assertCount(1, $this->thread->replies);
     }
+
+    /** @test */
+    public function a_thread_notifies_all_registred_subscribers_when_a_reply_id_added()
+    {
+        Notification::fake();
+
+        $this->signIn()
+            ->thread
+            ->subscribe()
+            ->addReply([
+            'body' => "this is body",
+            'user_id' => 999
+        ]);
+
+        Notification::assertSentTo(auth()->user(), ThreadWasUpdated::class);
+    }
+
 
     /** @test */
     public function a_thread_belongs_to_a_channel()
@@ -87,5 +106,21 @@ class ThreadTest extends TestCase
 
         // then we should be able to fetch all threads that the user subscribed to
         $this->assertCount(0, $thread->subscriptions);
+    }
+
+    /** @test */
+    public function a_thread_can_check_if_the_authenticated_user_has_read_all_replies()
+    {
+        $this->signIn();
+
+        $thread = create('App\Thread');
+
+        tap(auth()->user(), function ($user) use ($thread) {
+            $this->assertTrue($thread->hasUpdatesFor($user));
+
+            $user->read($thread);
+
+            $this->assertFalse($thread->hasUpdatesFor($user ));
+        });
     }
 }

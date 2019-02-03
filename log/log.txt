@@ -3,3 +3,18 @@ Bug
 
 Additional Features
     -
+
+Shortcuts:
+    - Show inherited members of any class (CMD+F12)
+
+
+Features:
+---------
+    - Create & manage thread
+    - create & manage reply
+    - user activity feed
+    - thread subscriptions
+    - subscribed reply activity notifications
+    - Highlight not visited thread and updated thread
+    - spam detectation (working...)
+    -
