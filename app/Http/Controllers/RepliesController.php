@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Notifications\YouWereMentioned;
 use App\Reply;
+use App\Rules\SpamFree;
 use App\Thread;
-use App\Inspaction\Spam;
+use App\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
+
 
 class RepliesController extends Controller
 {
@@ -39,27 +43,27 @@ class RepliesController extends Controller
      *
      * @param  $channelId
      * @param Thread $thread
-     * @param Spam $spam
      * @return \Illuminate\Http\Response
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function store($channelId, Thread $thread, Spam $spam)
+    public function store($channelId, Thread $thread)
     {
-        $this->validate(request(), ['body' => 'required']);
+        try {
+            if (Gate::denies('create', new Reply)) {
+                return response("You are posting too freaquently, Please take a break :)", 422);
+            }
 
-        // spam check
-        $spam->detect(request('body'));
+            $this->validate(request(), ['body' => ['required', new SpamFree]]);
 
-        $reply = $thread->addReply([
-            'body' => request('body'),
-            'user_id' => auth()->id()
-        ]);
-
-        if (request()->expectsJson()) {
-            return $reply->load('owner');
+            $reply = $thread->addReply([
+                'body' => request('body'),
+                'user_id' => auth()->id()
+            ]);
+        } catch (\Exception $e) {
+            return response("Sorry, your request could not be saved at the moment.", 422);
         }
 
-        return back()->with('flash', 'Your reply has been left');
+        return $reply->load('owner');
     }
 
     /**
@@ -94,7 +98,13 @@ class RepliesController extends Controller
     {
         $this->authorize('update', $reply);
 
-        $reply->update(request(['body']));
+        try {
+            $this->validate(request(), ['body' => ['required', new SpamFree]]);
+
+            $reply->update(request(['body']));
+        } catch (\Exception $e) {
+            return response("Sorry, your request could not be saved at the moment.", 422);
+        }
     }
 
     /**
@@ -115,4 +125,5 @@ class RepliesController extends Controller
 
         return back();
     }
+
 }

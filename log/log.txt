@@ -17,4 +17,12 @@ Features:
     - subscribed reply activity notifications
     - Highlight not visited thread and updated thread
     - spam detectation (working...)
+    - Mention users
+    - Mention users notification
     -
+
+
+
+feature need to fix:
+--------------------
+users_may_only_reply_a_maximum_of_once_per_minute   54
