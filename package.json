@@ -24,6 +24,8 @@
         "vue-template-compiler": "^2.5.22"
     },
     "dependencies": {
+        "at.js": "^1.5.4",
+        "jquery.caret": "^0.3.1",
         "moment": "^2.24.0"
     }
 }

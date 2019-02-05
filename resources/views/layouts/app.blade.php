@@ -50,6 +50,8 @@
         }
         [v-cloak] {display:none}
     </style>
+
+    @yield("style")
 </head>
 <body>
     <div id="app">

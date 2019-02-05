@@ -15,13 +15,15 @@
 
         <div class="card-body">
             <div v-if="editing">
-                <div class="form-group">
-                    <textarea name="" id="" class="form-control" rows="2" v-model="body"></textarea>
-                </div>
-                <button class="btn btn-primary btn-sm" @click="update">Update</button>
-                <button class="btn btn-link" @click="editing = false">Cencel</button>
+                <form @submit="update">
+                    <div class="form-group">
+                        <textarea name="" id="" class="form-control" rows="2" v-model="body" required></textarea>
+                    </div>
+                    <button class="btn btn-primary btn-sm">Update</button>
+                    <button class="btn btn-link" @click="editing = false" type="button">Cencel</button>
+                </form>
             </div>
-            <div v-else v-text="body"></div>
+            <div v-else v-html="body"></div>
         </div>
 
         <div class="card-footer d-flex" v-if="canDelete">

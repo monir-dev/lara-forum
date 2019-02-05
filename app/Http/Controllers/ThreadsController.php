@@ -83,7 +83,9 @@ class ThreadsController extends Controller
      */
     public function show($channelId,Thread $thread)
     {
-        if (auth()->check()) auth()->user()->read($thread);
+        if (auth()->check()) {
+            auth()->user()->read($thread);
+        }
 
         return view('threads.show', [
             'thread' => $thread
@@ -145,6 +147,6 @@ class ThreadsController extends Controller
             $threads->where('channel_id', $channel->id);
         }
 
-        return $threads->get();
+        return $threads->paginate(25);
     }
 }
