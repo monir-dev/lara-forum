@@ -12,8 +12,8 @@
                     </a>
 
                     <span class="ml-3">
-                                        Posted by : <a href="{{ url('profiles/' . $thread->owner->name) }}">{{ $thread->owner->name }}</a>
-                                    </span>
+                        Posted by : <a href="{{ url('profiles/' . $thread->owner->name) }}">{{ $thread->owner->name }}</a>
+                    </span>
                 </h4>
 
                 <a href="{{ $thread->path() }}">
@@ -24,6 +24,11 @@
 
         <div class="card-body">
             {{ $thread->body }}
+        </div>
+
+        <div class="card-footer">
+            {{--{{ $thread->visits()->count() }} visits--}} {{-- for redis--}}
+            {{ $thread->visits_count }} visits
         </div>
     </div>
 @empty

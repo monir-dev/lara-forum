@@ -163,4 +163,14 @@ class Thread extends Model
         return $this->updated_at > cache($key);
     }
 
+    /**
+     * This class is using Redis for managing visits
+     *
+     * @return Visit class instance
+     */
+    public function visits()
+    {
+        return new Visit($this);
+    }
+
 }

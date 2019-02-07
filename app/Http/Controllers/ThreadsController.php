@@ -6,9 +6,11 @@ use App\Channel;
 use App\Rules\SpamFree;
 use App\Thread;
 use App\Filters\ThreadFilters;
+use App\Trending;
 use App\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Redis;
 
 /**
  * Class ThreadsController
@@ -26,7 +28,7 @@ class ThreadsController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(Channel $channel, ThreadFilters $filters)
+    public function index(Channel $channel, ThreadFilters $filters, Trending $trending)
     {
         $threads = $this->getThreads($channel, $filters);
 
@@ -34,7 +36,10 @@ class ThreadsController extends Controller
             return $threads;
         }
 
-        return view('threads.index', compact('threads'));
+        return view('threads.index', [
+            'threads' => $threads,
+            'trending' => $trending->pull()
+        ]);
     }
 
     /**
@@ -56,6 +61,10 @@ class ThreadsController extends Controller
      */
     public function store(Request $request)
     {
+        if (! auth()->user()->hasVerifiedEmail()) {
+            return redirect('/threads')->with('flash', 'You must confirm your email address.');
+        }
+
         $this->validate($request, [
             'title' => ['required', new SpamFree()],
             'body' => ['required', new SpamFree()],
@@ -81,38 +90,23 @@ class ThreadsController extends Controller
      * @param  \App\Thread  $thread
      * @return \Illuminate\Http\Response
      */
-    public function show($channelId,Thread $thread)
+    public function show($channelId,Thread $thread, Trending $trending)
     {
         if (auth()->check()) {
             auth()->user()->read($thread);
         }
 
+        $trending->push($thread);
+
+        # for Redis visit count
+//        $thread->visits()->count();
+
+        # for table visits_count column increment
+        $thread->increment('visits_count');
+
         return view('threads.show', [
             'thread' => $thread
         ]);
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Thread  $thread
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Thread $thread)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Thread  $thread
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, Thread $thread)
-    {
-        //
     }
 
     /**

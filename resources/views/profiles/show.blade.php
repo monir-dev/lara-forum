@@ -6,7 +6,7 @@
             <div class="col-md-8">
 
                 <div class="page-header">
-                    <h2>{{ $profileUser->name }}</h2>
+                    <avatar-form :user="{{ $profileUser }}"></avatar-form>
                 </div>
 
                 @forelse($activities as $date => $records)

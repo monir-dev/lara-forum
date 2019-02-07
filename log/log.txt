@@ -10,19 +10,46 @@ Shortcuts:
 
 Features:
 ---------
+Thread:
     - Create & manage thread
-    - create & manage reply
-    - user activity feed
-    - thread subscriptions
-    - subscribed reply activity notifications
     - Highlight not visited thread and updated thread
-    - spam detectation (working...)
+    - thread subscriptions
+    - Sorting
+        - All thread
+        - My thread
+        - Populart thread All time
+        - Unanswered thread
+    - trending thread (redis)
+    - Thread visit count (redis/mysql)
+    - spam detectation
+
+Reply:
+    - create & manage reply
+    - spam detectation
+
+Users:
+    - user activity feed
+    - subscribed reply activity notifications
     - Mention users
     - Mention users notification
     -
-
+Upcomming:
+    - site visitor count
+    - Administration
+    - trending thread (mysql)
+    - multilangual
+    -
 
 
 feature need to fix:
 --------------------
 users_may_only_reply_a_maximum_of_once_per_minute   54
+
+
+Redis cmd:
+----------
+redis-cli
+zincrby('key', 1, 'value')
+zrevrange('key', 0, -1)
+del 'key'
+zrevrange 'key ' 0 -1 WITHSCORES

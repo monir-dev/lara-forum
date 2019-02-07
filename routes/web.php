@@ -39,3 +39,6 @@ Route::delete('/replies/{reply}/favorites', 'FavoritesController@destroy');
 Route::get('profiles/{user}', 'ProfilesController@show')->name('profile');
 Route::get('profiles/{user}/notifications', 'UserNotifications@index');
 Route::delete('profiles/{user}/notification/{notification}', 'UserNotifications@destroy');
+
+
+Route::post('api/users/{user}/avatar', 'Api\UserAvatarController@store')->name('avatar');
