@@ -15,18 +15,18 @@ class Reply extends Model
 
     protected $with = ['owner', 'favorites'];
 
-    protected $appends = ['favoritesCount', 'isFavorited'];
+    protected $appends = ['favoritesCount', 'isFavorited', 'isBest'];
 
     protected static function boot()
     {
         parent::boot();
 
-        static::created(function($model) {
-           $model->thread->increment('replies_count');
+        static::created(function($reply) {
+            $reply->thread->increment('replies_count');
         });
 
-        static::deleted(function ($model) {
-            $model->thread->decrement('replies_count');
+        static::deleted(function ($reply) {
+            $reply->thread->decrement('replies_count');
         });
     }
 
@@ -62,4 +62,15 @@ class Reply extends Model
 
         return $matches[1];
     }
+
+    public function getIsBestAttribute()
+    {
+        return $this->isBest();
+    }
+
+    public function isBest()
+    {
+        return $this->thread->best_reply_id == $this->id;
+    }
+
 }

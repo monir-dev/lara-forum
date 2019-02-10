@@ -3099,6 +3099,8 @@ __webpack_require__.r(__webpack_exports__);
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
 //
 //
 //
@@ -3125,8 +3127,13 @@ __webpack_require__.r(__webpack_exports__);
   },
   methods: {
     flash: function flash(data) {
-      this.body = data.message;
-      this.level = data.level;
+      if (_typeof(data) == "object") {
+        this.body = data.message;
+        this.level = data.level;
+      } else if (typeof data == "string") {
+        this.body = data;
+      }
+
       this.show = true;
       this.hide();
     },
@@ -3224,11 +3231,6 @@ __webpack_require__.r(__webpack_exports__);
     return {
       body: ''
     };
-  },
-  computed: {
-    signedId: function signedId() {
-      return window.App.signedId;
-    }
   },
   mounted: function mounted() {
     $("#body").atwho({
@@ -3354,6 +3356,10 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
 
 
 
@@ -3443,6 +3449,9 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
 
 
 /* harmony default export */ __webpack_exports__["default"] = ({
@@ -3454,24 +3463,23 @@ __webpack_require__.r(__webpack_exports__);
     return {
       editing: false,
       id: this.item.id,
-      body: this.item.body
+      body: this.item.body,
+      isBest: this.item.isBest,
+      reply: this.item
     };
   },
   computed: {
     ago: function ago() {
       var time = moment__WEBPACK_IMPORTED_MODULE_0___default()(this.item.created_at + "+00:00", "YYYY-MM-DD HH:mm:ssZ");
       return time.fromNow() + '...';
-    },
-    signedId: function signedId() {
-      return window.App.signedId;
-    },
-    canDelete: function canDelete() {
-      var _this = this;
-
-      return this.authorize(function (user) {
-        return _this.item.user_id === user.id;
-      });
     }
+  },
+  created: function created() {
+    var _this = this;
+
+    window.events.$on('best-reply-selected', function (id) {
+      return _this.isBest = id == _this.id;
+    });
   },
   methods: {
     update: function update() {
@@ -3489,6 +3497,15 @@ __webpack_require__.r(__webpack_exports__);
     destroy: function destroy() {
       axios.delete('/replies/' + this.item.id);
       this.$emit('deleted', this.item.id);
+    },
+    markAsBestReply: function markAsBestReply() {
+      var _this3 = this;
+
+      axios.post("/replies/".concat(this.id, "/best")).then(function () {
+        return window.events.$emit('best-reply-selected', _this3.id);
+      }).catch(function (err) {
+        return console.log(err);
+      });
     }
   }
 });
@@ -3595,15 +3612,27 @@ __webpack_require__.r(__webpack_exports__);
 
 
 /* harmony default export */ __webpack_exports__["default"] = ({
-  props: ['initialRepliesCount'],
+  props: ['thread'],
   components: {
     Replies: _components_Replies__WEBPACK_IMPORTED_MODULE_1__["default"],
     SubscribeButton: _components_SubscribeButton__WEBPACK_IMPORTED_MODULE_0__["default"]
   },
   data: function data() {
     return {
-      repliesCount: this.initialRepliesCount
+      repliesCount: this.thread.replies_count,
+      locked: this.thread.locked
     };
+  },
+  methods: {
+    toggleLock: function toggleLock() {
+      var _this = this;
+
+      axios[this.locked ? 'delete' : 'post']("/threads-locked/".concat(this.thread.slug)).then(function () {
+        return _this.locked = !_this.locked;
+      }).catch(function (err) {
+        return console.log(err);
+      });
+    }
   }
 });
 
@@ -57293,7 +57322,7 @@ var render = function() {
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
   return _c("div", { staticClass: "mt-4" }, [
-    _vm.signedId
+    _vm.signedIn
       ? _c("div", [
           _c("div", { staticClass: "form-group" }, [
             _c("textarea", {
@@ -57490,10 +57519,16 @@ var render = function() {
         on: { updated: _vm.fetch }
       }),
       _vm._v(" "),
-      _c("new-reply", {
-        attrs: { endpoint: _vm.endpoint },
-        on: { created: _vm.add }
-      })
+      _vm.$parent.locked
+        ? _c("p", { staticClass: "mt-2 text-center" }, [
+            _vm._v(
+              "\n        This Thread has beed locked. No more reply is allowed.\n    "
+            )
+          ])
+        : _c("new-reply", {
+            attrs: { endpoint: _vm.endpoint },
+            on: { created: _vm.add }
+          })
     ],
     2
   )
@@ -57522,7 +57557,11 @@ var render = function() {
   var _c = _vm._self._c || _h
   return _c(
     "div",
-    { staticClass: "card mt-3", attrs: { id: "reply-" + _vm.id } },
+    {
+      staticClass: "card mt-3",
+      class: _vm.isBest ? "text-white bg-dark" : "",
+      attrs: { id: "reply-" + _vm.id }
+    },
     [
       _c("div", { staticClass: "card-header" }, [
         _c("div", { staticClass: "level" }, [
@@ -57536,7 +57575,7 @@ var render = function() {
             _vm._v("...\n            ")
           ]),
           _vm._v(" "),
-          _vm.signedId
+          _vm.signedIn
             ? _c("div", [_c("Favorite", { attrs: { reply: _vm.item } })], 1)
             : _vm._e()
         ])
@@ -57592,29 +57631,45 @@ var render = function() {
           : _c("div", { domProps: { innerHTML: _vm._s(_vm.body) } })
       ]),
       _vm._v(" "),
-      _vm.canDelete
+      _vm.authorize("owns", _vm.reply) ||
+      (_vm.authorize("owns", _vm.reply.thread) && !_vm.isBest)
         ? _c("div", { staticClass: "card-footer d-flex" }, [
-            _c(
-              "button",
-              {
-                staticClass: "btn btn-outline-warning btn-sm mr-2",
-                on: {
-                  click: function($event) {
-                    _vm.editing = true
-                  }
-                }
-              },
-              [_vm._v("Edit")]
-            ),
+            _vm.authorize("owns", _vm.reply)
+              ? _c("div", [
+                  _c(
+                    "button",
+                    {
+                      staticClass: "btn btn-outline-warning btn-sm mr-2",
+                      on: {
+                        click: function($event) {
+                          _vm.editing = true
+                        }
+                      }
+                    },
+                    [_vm._v("Edit")]
+                  ),
+                  _vm._v(" "),
+                  _c(
+                    "button",
+                    {
+                      staticClass: "btn btn-outline-danger btn-sm mr-2",
+                      on: { click: _vm.destroy }
+                    },
+                    [_vm._v("Delete")]
+                  )
+                ])
+              : _vm._e(),
             _vm._v(" "),
-            _c(
-              "button",
-              {
-                staticClass: "btn btn-outline-danger btn-sm mr-2",
-                on: { click: _vm.destroy }
-              },
-              [_vm._v("Delete")]
-            )
+            _vm.authorize("owns", _vm.reply.thread) && !_vm.isBest
+              ? _c(
+                  "button",
+                  {
+                    staticClass: "btn btn-outline-dark btn-sm mr-2 ml-auto",
+                    on: { click: _vm.markAsBestReply }
+                  },
+                  [_vm._v("Best reply?")]
+                )
+              : _vm._e()
           ])
         : _vm._e()
     ]
@@ -68993,6 +69048,26 @@ module.exports = function(module) {
 
 /***/ }),
 
+/***/ "./resources/js/Authorizations.js":
+/*!****************************************!*\
+  !*** ./resources/js/Authorizations.js ***!
+  \****************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+var user = window.App.user;
+module.exports = {
+  owns: function owns(model) {
+    var prop = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'user_id';
+    return model[prop] === user.id;
+  },
+  isAdmin: function isAdmin() {
+    return user.role_id == 1;
+  }
+};
+
+/***/ }),
+
 /***/ "./resources/js/app.js":
 /*!*****************************!*\
   !*** ./resources/js/app.js ***!
@@ -69009,11 +69084,25 @@ __webpack_require__(/*! ./bootstrap */ "./resources/js/bootstrap.js");
 
 window.Vue = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.common.js");
 
-Vue.prototype.authorize = function (handler) {
-  var user = window.App.user;
-  return user ? handler(user) : false;
+var authorizations = __webpack_require__(/*! ./Authorizations */ "./resources/js/Authorizations.js");
+
+Vue.prototype.authorize = function () {
+  if (!window.App.signedIn) return false;
+
+  for (var _len = arguments.length, params = new Array(_len), _key = 0; _key < _len; _key++) {
+    params[_key] = arguments[_key];
+  }
+
+  console.log(params[0]);
+
+  if (typeof params[0] === 'string') {
+    return authorizations[params[0]](params[1]);
+  }
+
+  return params[0](window.App.user);
 };
 
+Vue.prototype.signedIn = window.App.signedIn;
 window.events = new Vue();
 
 window.flash = function (message) {

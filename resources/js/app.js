@@ -9,11 +9,20 @@ require('./bootstrap');
 
 window.Vue = require('vue');
 
-Vue.prototype.authorize = function (handler) {
-    let user = window.App.user;
+let authorizations = require('./Authorizations');
 
-    return user ? handler(user) : false;
+Vue.prototype.authorize = function (...params) {
+    if (! window.App.signedIn) return false;
+
+    console.log(params[0]);
+    if  (typeof params[0] === 'string') {
+        return authorizations[params[0]](params[1]);
+    }
+
+    return params[0](window.App.user);
 };
+
+Vue.prototype.signedIn = window.App.signedIn;
 
 
 window.events = new Vue();

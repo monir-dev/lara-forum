@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Activity;
+use App\Thread;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\WithFaker;
@@ -27,15 +28,14 @@ class CreateThreadsTest extends TestCase
     /** @test */
     public function authenticated_user_must_confirm_their_email_address_before_creating_a_thread()
     {
-        $this->publishThread()
-            ->assertRedirect('/threads')
-            ->assertSessionHas('flash', 'You must confirm your email address.');
+        $this->publishThreadNonVerifiedUser()
+            ->assertRedirect('/email/verify');
     }
 
     /** @test */
-    public function an_authenticated_user_can_create_new_forum_threads()
+    public function an_authenticated_and_email_verified_user_can_create_new_forum_threads()
     {
-        $this->signIn();
+        $this->signIn($this->verifiedUser());
 
         $thread = make('App\Thread');
 
@@ -44,6 +44,32 @@ class CreateThreadsTest extends TestCase
         $this->get($response->headers->get('Location'))
             ->assertSee($thread->title)
             ->assertSee($thread->body);
+    }
+
+    /** @test */
+    public function a_thread_requires_a_unique_slug()
+    {
+        $this->signIn($this->verifiedUser());
+
+        $thread = create('App\Thread', ['title' => 'Foo Title', 'slug' => 'foo-title']);
+        $this->assertEquals($thread->fresh()->slug, 'foo-title');
+
+        $this->post(url('/threads'), $thread->toArray());
+        $this->assertTrue(Thread::whereSlug('foo-title-2')->exists());
+
+        $this->post(url('/threads'), $thread->toArray());
+        $this->assertTrue(Thread::whereSlug('foo-title-3')->exists());
+    }
+
+    /** @test */
+    public function a_thread_with_a_title_end_with_a_number_should_generate_proper_slug()
+    {
+        $this->signIn($this->verifiedUser());
+
+        $thread = create('App\Thread', ['title' => 'Foo Title 24', 'slug' => 'foo-title-24']);
+
+        $this->post(url('/threads'), $thread->toArray());
+        $this->assertTrue(Thread::whereSlug('foo-title-24-2')->exists());
     }
 
     /** @test */
@@ -108,8 +134,23 @@ class CreateThreadsTest extends TestCase
         $this->assertEquals(0, Activity::count());
     }
 
+    public function verifiedUser()
+    {
+        return $user = create('App\User', ['email_verified_at' => now()]);
+    }
 
     public function publishThread($overrides = [])
+    {
+        $this
+            ->withExceptionHandling()
+            ->signIn($this->verifiedUser());
+
+        $thread = make('App\Thread', $overrides);
+
+        return $this->post('/threads', $thread->toArray());
+    }
+
+    public function publishThreadNonVerifiedUser($overrides = [])
     {
         $this
             ->withExceptionHandling()

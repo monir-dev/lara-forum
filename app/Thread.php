@@ -4,6 +4,7 @@ namespace App;
 
 use App\Events\ThreadHasNewReply;
 use App\Traits\RecordActivity;
+use function GuzzleHttp\Psr7\str;
 use Illuminate\Database\Eloquent\Model;
 use App\Notifications\ThreadWasUpdated;
 
@@ -63,7 +64,7 @@ class Thread extends Model
      * @return string
      */
     public function path() {
-        return "/threads/{$this->channel->slug}/{$this->id}";
+        return "/threads/{$this->channel->slug}/{$this->slug}";
     }
 
     /**
@@ -171,6 +172,34 @@ class Thread extends Model
     public function visits()
     {
         return new Visit($this);
+    }
+
+    public function getRouteKeyName()
+    {
+        return 'slug';
+    }
+
+    public function setSlugAttribute($title)
+    {
+        $slug = str_slug($title);
+        $original = $slug;
+        $count = 2;
+
+        while (static::whereSlug($slug)->exists()) {
+            $slug = "{$original}-" . $count++;
+        }
+
+        $this->attributes['slug'] = $slug;
+    }
+
+    public function markBestReply($reply)
+    {
+        $this->update(['best_reply_id' => $reply->id]);
+    }
+
+    public function lock()
+    {
+        $this->update(['locked' => true]);
     }
 
 }

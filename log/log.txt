@@ -10,6 +10,21 @@ Shortcuts:
 
 Features:
 ---------
+Login:
+    - email password login / registration
+    - email verification
+
+Administrator:
+    -
+
+Users:
+    - user activity feed
+    - subscribed reply activity notifications
+    - Mention users
+    - Mention users notification
+    - Fevorite reply
+    -
+
 Thread:
     - Create & manage thread
     - Highlight not visited thread and updated thread
@@ -23,17 +38,19 @@ Thread:
     - Thread visit count (redis/mysql)
     - spam detectation
 
+
 Reply:
     - create & manage reply
+    - mark best reply
+    - reply favorite count
     - spam detectation
-
-Users:
-    - user activity feed
-    - subscribed reply activity notifications
-    - Mention users
-    - Mention users notification
     -
+
+
 Upcomming:
+    - Administrator can lock threads
+    - Administrator can lock users
+    -
     - site visitor count
     - Administration
     - trending thread (mysql)

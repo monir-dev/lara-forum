@@ -6,7 +6,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     use Notifiable;
 
@@ -65,6 +65,11 @@ class User extends Authenticatable
     public function getAvatarPathAttribute($avatar)
     {
         return !$avatar ? asset('/storage/images/avatars/default.png') : asset('/storage/' .$avatar);
+    }
+
+    public function isAdmin()
+    {
+        return $this->role_id == 1;
     }
 
 }

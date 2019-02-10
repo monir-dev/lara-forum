@@ -1,5 +1,5 @@
 <template>
-    <div class="card mt-3" :id="'reply-'+id">
+    <div class="card mt-3" :class="isBest ? 'text-white bg-dark': ''" :id="'reply-'+id">
         <div class="card-header">
             <div class="level">
                 <h5 class="flex">
@@ -7,7 +7,7 @@
                     </a> said in <span v-text="ago"></span>...
                 </h5>
 
-                <div v-if="signedId">
+                <div v-if="signedIn">
                     <Favorite :reply="item"></Favorite>
                 </div>
             </div>
@@ -26,9 +26,12 @@
             <div v-else v-html="body"></div>
         </div>
 
-        <div class="card-footer d-flex" v-if="canDelete">
-            <button class="btn btn-outline-warning btn-sm mr-2" @click="editing = true">Edit</button>
-            <button class="btn btn-outline-danger btn-sm mr-2" @click="destroy">Delete</button>
+        <div class="card-footer d-flex" v-if="authorize('owns', reply) || authorize('owns', reply.thread) && ! isBest">
+            <div v-if="authorize('owns', reply)">
+                <button class="btn btn-outline-warning btn-sm mr-2" @click="editing = true">Edit</button>
+                <button class="btn btn-outline-danger btn-sm mr-2" @click="destroy">Delete</button>
+            </div>
+            <button class="btn btn-outline-dark btn-sm mr-2 ml-auto" @click="markAsBestReply" v-if="authorize('owns', reply.thread) && ! isBest">Best reply?</button>
         </div>
     </div>
 </template>
@@ -45,20 +48,20 @@
             return {
                 editing: false,
                 id: this.item.id,
-                body: this.item.body
+                body: this.item.body,
+                isBest: this.item.isBest,
+                reply: this.item
             }
         },
         computed: {
             ago() {
                 const time = moment(this.item.created_at + "+00:00", "YYYY-MM-DD HH:mm:ssZ");
                 return time.fromNow() + '...';
-            },
-            signedId() {
-                return window.App.signedId;
-            },
-            canDelete() {
-                return this.authorize(user => this.item.user_id === user.id);
             }
+        },
+
+        created() {
+            window.events.$on('best-reply-selected', id => this.isBest = (id == this.id));
         },
 
         methods: {
@@ -80,6 +83,15 @@
                 axios.delete('/replies/' + this.item.id);
 
                 this.$emit('deleted', this.item.id);
+            },
+
+            markAsBestReply()
+            {
+                axios
+                    .post(`/replies/${this.id}/best`)
+                    .then(() => window.events.$emit('best-reply-selected', this.id))
+                    .catch(err => console.log(err));
+
             }
         }
     }

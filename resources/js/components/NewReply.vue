@@ -1,7 +1,7 @@
 <template>
 
     <div class="mt-4">
-        <div v-if="signedId">
+        <div v-if="signedIn">
             <div class="form-group">
                 <textarea
                     name="body"
@@ -33,12 +33,6 @@
                 body: ''
             }
         },
-        computed:{
-            signedId() {
-                return window.App.signedId;
-            }
-        },
-
         mounted() {
             $("#body").atwho({
                 at: "@",

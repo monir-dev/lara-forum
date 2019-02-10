@@ -28,12 +28,12 @@ class ThreadTest extends TestCase
     }
 
     /** @test */
-    public function a_thread_can_make_string_path() {
+    public function a_thread_has_a_path() {
 
         $thread = create('App\Thread');
 
         $this->assertEquals(
-            "/threads/{$thread->channel->slug}/{$thread->id}",
+            "/threads/{$thread->channel->slug}/{$thread->slug}",
             $thread->path()
         );
     }
@@ -137,5 +137,15 @@ class ThreadTest extends TestCase
 
         $thread->visits()->record();
         $this->assertEquals(2, $thread->visits()->count());
+    }
+
+    /** @test */
+    public function a_thread_can_be_locked()
+    {
+        $this->assertFalse($this->thread->locked);
+
+        $this->thread->lock();
+
+        $this->assertTrue($this->thread->locked);
     }
 }

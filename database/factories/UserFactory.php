@@ -16,6 +16,7 @@ use Faker\Generator as Faker;
 $factory->define(App\User::class, function (Faker $faker) {
     return [
         'name' => $faker->name,
+        'username' => $faker->unique()->name,
         'email' => $faker->unique()->safeEmail,
 //        'email_verified_at' => now(),
         'password' => '$2y$10$TKh8H1.PfQx37YgCzwiKb.KjNyWgaHb9cbcoQgdIVFlYg7B77UdFm', // secret
@@ -24,7 +25,9 @@ $factory->define(App\User::class, function (Faker $faker) {
 });
 
 $factory->define(App\Thread::class, function (Faker $faker) {
+    $title = $faker->sentence;
    return [
+       'slug' => str_slug($title),
         'user_id' => function() {
             return factory('App\User')->create()->id;
         },
@@ -34,7 +37,8 @@ $factory->define(App\Thread::class, function (Faker $faker) {
        'title' => $faker->sentence,
        'body' => $faker->paragraph,
        'replies_count' => 0,
-       'visits_count' => 0
+       'visits_count' => 0,
+       'locked' => false
    ];
 });
 
@@ -42,7 +46,7 @@ $factory->define(App\Channel::class, function (Faker $faker) {
     $name = $faker->name;
     return [
         'name' => $name,
-        'slug' => $name
+        'slug' => str_slug($name)
     ];
 });
 

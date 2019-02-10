@@ -21,8 +21,12 @@
         },
         methods: {
             flash(data) {
-                this.body = data.message;
-                this.level = data.level;
+                if (typeof (data) == "object") {
+                    this.body = data.message;
+                    this.level = data.level;
+                } else if (typeof (data) == "string") {
+                    this.body = data;
+                }
                 this.show = true;
 
                 this.hide();

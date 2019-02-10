@@ -15,15 +15,18 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Auth::routes();
+Auth::routes(['verify' => true]);
 
 Route::get('/home', 'HomeController@index')->name('home');
 
 Route::get('threads', 'ThreadsController@index');
 Route::get('threads/create', 'ThreadsController@create');
 Route::get('threads/{channel}/{thread}', 'ThreadsController@show');
+
+Route::post('threads-locked/{thread}', 'LockThreadsController@store')->name('lock-thread')->middleware('admin');
+
 Route::delete('threads/{channel}/{thread}', 'ThreadsController@destroy');
-Route::post('threads', 'ThreadsController@store');
+Route::post('threads', 'ThreadsController@store')->middleware('verified');
 Route::get('threads/{channel}', 'ThreadsController@index');
 
 Route::get('threads/{channel}/{thread}/replies', 'RepliesController@index');
@@ -32,6 +35,7 @@ Route::post('threads/{channel}/{thread}/subscriptions', 'SubscriptionController@
 Route::delete('threads/{channel}/{thread}/subscriptions', 'SubscriptionController@destroy');
 Route::patch('/replies/{reply}', 'RepliesController@update');
 Route::delete('/replies/{reply}', 'RepliesController@destroy');
+Route::post('/replies/{reply}/best', 'BestRepliesController@store');
 
 Route::post('/replies/{reply}/favorites', 'FavoritesController@store');
 Route::delete('/replies/{reply}/favorites', 'FavoritesController@destroy');
